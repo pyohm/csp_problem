@@ -160,6 +160,26 @@ def solve_class_assignment():
         print("최적의 반 편성 결과를 찾았습니다!")
         print(f"(소요 시간: {solver.WallTime():.2f}초)")
         print("-" * 30)
+        
+        # CSV 파일 출력을 위한 결과 처리
+        # 학생 ID -> 배정된 반 ID(0-5) 딕셔너리 생성
+        assigned_class = {s_id: c_id for s_id in student_ids for c_id in CLASS_IDS if solver.Value(assign[s_id, c_id])}
+
+        # 원본 DataFrame에 '올해 반배정' 열 추가 (반 번호는 1부터 시작)
+        df['올해 반배정'] = df['id'].map(assigned_class).apply(lambda x: x + 1 if pd.notnull(x) else '')
+        
+        # '운동선호' 열 다음에 '올해 반배정' 열이 오도록 열 순서 재배치
+        cols = df.columns.tolist()
+        if '올해 반배정' in cols and '운동선호' in cols:
+            cols.insert(cols.index('운동선호') + 1, cols.pop(cols.index('올해 반배정')))
+            df = df[cols]
+
+        # 결과를 CSV 파일로 저장 (UTF-8-sig 인코딩으로 Excel에서 한글 깨짐 방지)
+        output_filename = '학급반편성CSP 문제 입력파일 결과.csv'
+        df.to_csv(output_filename, index=False, encoding='utf-8-sig')
+        print(f"결과가 '{output_filename}' 파일로 저장되었습니다.")
+        print("-" * 30)
+        # ======================================================
 
         class_assignments = {c: [] for c in CLASS_IDS}
         for s_id in student_ids:
